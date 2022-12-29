@@ -1,29 +1,26 @@
 const express = require('express');
 const {faker} = require('@faker-js/faker');
+const jwt = require('jsonwebtoken');
 const router = express.Router();
 
 const authorSchema = require('../models/authorSchema');
 const bookSchema = require('../models/bookSchema');
+const config = require('../config');
+const isAuthenticated = require('../middleware/isAuthenticated');
 
 router.post('/', async (req, res) => {
-    const author = await authorSchema.create({
+    const data = {
         Name : req.body.Name,
         PhNo : req.body.Number,
         email : req.body.email
-    });
+    };
+
+    const accessToken = jwt.sign(data, config.jwt_secret_key);
+    console.log(accessToken);
+    const author = await authorSchema.create(data);
 
     if(author){
-        // const book = await bookSchema.create({
-        //     title : req.body.title,
-        //     likes : Math.floor(Math.random() * 20),
-        //     author : author._id
-        // });
-
-        // if(book)
-        //     res.json({Author : author, Book : book});
-        // else
-            res.json(author);
-    
+        res.json({Author : author, accessToken : accessToken});    
     } else {
         res.json({Msg : "Author not created"});
     }
@@ -39,28 +36,36 @@ router.get('/', async (req, res) =>{
 
 });
 
-router.put('/:id', async (req, res) => {
-    let toUpdate = {};
-    req.body.Name?(toUpdate.Name = req.body.Name) : "";
-    req.body.PhNo?(toUpdate.PhNo = req.body.PhNo) : "";
-    req.body.email?(toUpdate.email = req.body.email) : "";
+router.put('/', isAuthenticated, async (req, res) => {
 
-    const author = await authorSchema.findByIdAndUpdate(req.params.id, { $set : toUpdate});
+    const author = await authorSchema.findOne({email :req.user.email});
+    console.log(req.user.email);
 
-    if(author)
-        res.json(author);
-    else
-        res.json({Msg : 'Author not Updated'});
+    if(author){
+        let toUpdate = {};
+        req.body.Name?(toUpdate.Name = req.body.Name) : "";
+        req.body.PhNo?(toUpdate.PhNo = req.body.PhNo) : "";
+
+        const updatedAuthor = await authorSchema.findByIdAndUpdate(author._id, { $set : toUpdate});
+
+        if(updatedAuthor)
+            res.json(updatedAuthor);
+        else
+            res.json({Msg : 'Author not Updated'});
+    } else {
+        res.json({Msg : 'Author not found'});
+    }
 
 });
 
-router.delete('/:id', async (req, res)=>{
-    const con = await authorSchema.findByIdAndDelete(req.params.id);
+router.delete('/', isAuthenticated, async (req, res)=>{
+    const author = await authorSchema.findOne({email :req.user.email});
+    const con = await authorSchema.findByIdAndDelete(author._id);
     res.json(con);
 })
 
-router.get('/me', async (req, res) =>{
-    const author = await authorSchema.findById(req.user.id);
+router.get('/me', isAuthenticated, async (req, res) =>{
+    const author = await authorSchema.findOne({email :req.user.email});
 
     if(author)
         res.json(author);

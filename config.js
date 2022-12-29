@@ -4,7 +4,8 @@ const config = {
     mongodbOptions : {
         useNewUrlParser : true,
         useUnifiedTopology : true
-    }
+    },
+    jwt_secret_key : "AniketKumar" // Can also be stored in .env
 }
 
 module.exports = config;
