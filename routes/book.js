@@ -27,7 +27,7 @@ router.get('/:id', async (req, res) =>{
     
 });
 
-router.post('/', async (req, res)=>{
+router.post('/', isAuthenticated, async (req, res)=>{
 
     const author = await authorSchema.findOne({email :req.user.email});
     const book = await bookSchema.create({
