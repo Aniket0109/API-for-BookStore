@@ -27,7 +27,7 @@ router.get('/:id', async (req, res) =>{
     
 });
 
-router.post('/', isAuthenticated, async (req, res)=>{
+router.post('/', async (req, res)=>{
 
     const author = await authorSchema.findOne({email :req.user.email});
     const book = await bookSchema.create({
@@ -43,7 +43,7 @@ router.post('/', isAuthenticated, async (req, res)=>{
     
 });
 
-router.put('/:id',isAuthenticated, async (req, res) =>{
+router.put('/:id', async (req, res) =>{
     const author = await authorSchema.findOne({email :req.user.email});
     const check = await bookSchema.findById(req.params.id);
 
@@ -87,7 +87,7 @@ router.put('/unlike/:id', async (req, res) =>{
     
 })
 
-router.delete('/:id', isAuthenticated, async (req, res) =>{
+router.delete('/:id', async (req, res) =>{
     const author = await authorSchema.findOne({email :req.user.email});
     const check = await bookSchema.findById(req.params.id);
 
